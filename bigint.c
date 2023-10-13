@@ -4,6 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+const char *BigIntErrorStrings[] = {
+    "Ok",
+    "ResultMemoryTooSmall",
+    "MemoryError",
+    "NotImplemented",
+};
+
 bigint *bigint_new_capacity(size_t capacity) {
   capacity = (capacity < MIN_LIMBS) ? MIN_LIMBS : capacity;
   struct bigint *bigint = malloc(sizeof(*bigint));
@@ -20,9 +27,22 @@ bigint *bigint_new_capacity(size_t capacity) {
   return bigint;
 }
 
+BigIntError bigint_resize(bigint *a, size_t len) {
+  if (a->capacity < len) {
+    a->limbs = realloc(a->limbs, LIMB_SIZE_BYTES * len);
+    if (a->limbs == NULL) {
+      return MemoryError;
+    }
+    memset(a->limbs + a->len, 0, (len - a->len) * LIMB_SIZE_BYTES);
+    a->capacity = len;
+  }
+  a->len = len;
+  return Ok;
+}
+
 void bigint_free(bigint *bigint) {
   free(bigint->limbs);
-  free(bigint);
+  bigint->capacity = 0;
 }
 
 size_t calc_needed_limbs_for_hex(size_t hex_len) {
@@ -33,17 +53,11 @@ size_t calc_needed_limbs_for_hex(size_t hex_len) {
   return needed_limbs;
 }
 
-bool bigint_set_hex(bigint *bigint, const char *hex) {
+BigIntError bigint_set_hex(const char *hex, bigint *result) {
   const size_t hex_len = strlen(hex);
   const size_t needed_limbs = calc_needed_limbs_for_hex(hex_len);
 
-  bigint->capacity = needed_limbs;
-  bigint->len = needed_limbs;
-  bigint->limbs = realloc(bigint->limbs, needed_limbs * sizeof(Limb));
-  if (bigint->limbs == NULL) {
-    bigint->len = 0;
-    return false;
-  }
+  bigint_resize(result, needed_limbs);
 
   size_t current_limb = 0;
   size_t nibble_count = 0;
@@ -54,14 +68,14 @@ bool bigint_set_hex(bigint *bigint, const char *hex) {
     char value = char2digit(nibble);
 
     if (value == -1) {
-      bigint->len = 0;
+      result->len = 0;
       return false;
     }
 
     limb |= ((Limb)value) << (4 * nibble_count);
 
     if (nibble_count == (LIMB_SIZE_BYTES * 2 - 1)) {
-      bigint->limbs[current_limb] = limb;
+      result->limbs[current_limb] = limb;
       current_limb++;
       nibble_count = 0;
       limb = 0;
@@ -71,7 +85,7 @@ bool bigint_set_hex(bigint *bigint, const char *hex) {
   }
 
   if (nibble_count > 0) {
-    bigint->limbs[current_limb] = limb;
+    result->limbs[current_limb] = limb;
   }
   return true;
 }
@@ -79,6 +93,7 @@ bool bigint_set_hex(bigint *bigint, const char *hex) {
 char *bigint_get_hex(const bigint *bigint, bool upper) {
   const char *OUT_HEX = upper ? "0123456789ABCDEF" : "0123456789abcdef";
   const size_t hex_len = bigint->len * LIMB_SIZE_BYTES * 2 + 1;
+
   char *hex = malloc(hex_len);
   if (hex == NULL) {
     return NULL;
@@ -108,104 +123,86 @@ char *bigint_get_hex(const bigint *bigint, bool upper) {
   return hex;
 }
 
-bigint *bigint_init_hex(const char *hex) {
-  bigint *bigint = bigint_new_capacity(MIN_LIMBS);
-  if (bigint == NULL) {
-    return NULL;
+BigIntError bigint_bit_not(const bigint *a, bigint *result) {
+  if (result->len != a->len) {
+    bigint_resize(result, a->len);
   }
-  bool is_ok = bigint_set_hex(bigint, hex);
-  if (!is_ok) {
-    bigint_free(bigint);
-    return NULL;
+  for (size_t i = 0; i < a->len; i++) {
+    result->limbs[i] = ~(a->limbs[i]);
   }
-  return bigint;
+  result->len = a->len;
+  return Ok;
 }
 
-bigint *bigint_bit_not(const bigint *bigint_) {
-  bigint *c = bigint_new_capacity(bigint_->len);
-  if (c == NULL) {
-    return NULL;
-  }
-  for (size_t i = 0; i < bigint_->len; i++) {
-    c->limbs[i] = ~(bigint_->limbs[i]);
-  }
-  c->len = bigint_->len;
-  return c;
+BigIntError bigint_bit_xor(const bigint *first, const bigint *second,
+                           bigint *result) {
+  BINARY_BIT_OPERATION(first, second, ^, result);
 }
 
-bigint *bigint_bit_xor(const bigint *first, const bigint *second) {
-  BINARY_BIT_OPERATION(first, second, ^);
+BigIntError bigint_bit_or(const bigint *first, const bigint *second,
+                          bigint *result) {
+  BINARY_BIT_OPERATION(first, second, |, result);
 }
 
-bigint *bigint_bit_or(const bigint *first, const bigint *second) {
-  BINARY_BIT_OPERATION(first, second, |);
+BigIntError bigint_bit_and(const bigint *first, const bigint *second,
+                           bigint *result) {
+  BINARY_BIT_OPERATION(first, second, &, result);
 }
 
-bigint *bigint_bit_and(const bigint *first, const bigint *second) {
-  BINARY_BIT_OPERATION(first, second, &);
-}
+BigIntError bigint_bit_shiftl(const bigint *a, size_t n, bigint *result) {
+  size_t limb_shifts = n / LIMB_SIZE_BITS;
+  size_t bit_shifts = n % LIMB_SIZE_BITS;
 
-bigint *bigint_bit_shiftl(const bigint *bigint_, size_t n) {
-  size_t limb_shifts = n / (LIMB_SIZE_BITS);
-  size_t bit_shifts = n % (LIMB_SIZE_BITS);
+  size_t new_len = a->len + limb_shifts;
 
-  size_t new_len = bigint_->len + limb_shifts;
-  bigint *result = bigint_new_capacity(new_len);
-  if (result == NULL) {
-    return NULL;
-  }
+  bigint_resize(result, new_len);
 
   Limb carry = 0;
-  for (size_t i = 0; i < bigint_->len; i++) {
-    Limb shifted = (bigint_->limbs[i] << bit_shifts) | carry;
-    carry = (bigint_->limbs[i] >> (LIMB_SIZE_BITS - bit_shifts)) &
+  for (size_t i = 0; i < a->len; i++) {
+    Limb shifted = (a->limbs[i] << bit_shifts) | carry;
+    carry = (a->limbs[i] >> (LIMB_SIZE_BITS - bit_shifts)) &
             ((1 << bit_shifts) - 1);
     result->limbs[i + limb_shifts] = shifted;
   }
   if (carry > 0) {
-    result->limbs[bigint_->len + limb_shifts] = carry;
+    result->limbs[a->len + limb_shifts] = carry;
     new_len++;
   }
-
   result->len = new_len;
-  return result;
+  return Ok;
 }
 
-bigint *bigint_bit_shiftr(const bigint *bigint_, size_t n) {
-  size_t limb_shifts = n / (LIMB_SIZE_BITS);
-  size_t bit_shifts = n % (LIMB_SIZE_BITS);
+BigIntError bigint_bit_shiftr(const bigint *a, size_t n, bigint *result) {
+  size_t limb_shifts = n / LIMB_SIZE_BITS;
+  size_t bit_shifts = n % LIMB_SIZE_BITS;
 
-  if (limb_shifts >= bigint_->len) {
-    return bigint_init_hex("0");
-  }
+  size_t new_len = a->len - limb_shifts;
+  bigint_resize(result, new_len);
 
-  size_t new_len = bigint_->len - limb_shifts;
-  bigint *result = bigint_new_capacity(new_len);
-  if (result == NULL) {
-    return NULL;
+  if (limb_shifts >= result->len) {
+    bigint_free(result);
+    *result = BIGINT_ZERO;
+    return Ok;
   }
 
   Limb carry = 0;
   for (size_t i = new_len - 1; i + 1 > 0; i--) {
-    Limb shifted = (bigint_->limbs[i + limb_shifts] >> bit_shifts) | carry;
-    carry = (bigint_->limbs[i + limb_shifts] << ((LIMB_SIZE_BITS)-bit_shifts));
+    Limb shifted = (a->limbs[i + limb_shifts] >> bit_shifts) | carry;
+    carry = (a->limbs[i + limb_shifts] << (LIMB_SIZE_BITS - bit_shifts));
     if (LIMB_SIZE_BITS == n)
       carry &= ((1 << bit_shifts) - 1);
     result->limbs[i] = shifted;
   }
   result->len = new_len;
-  return result;
+  return Ok;
 }
 
-bigint *bigint_add(const bigint *a, const bigint *b) {
+BigIntError bigint_add(const bigint *a, const bigint *b, bigint *result) {
   const size_t len_a = a->len;
   const size_t len_b = b->len;
   const size_t max_len = (len_a > len_b) ? len_a : len_b;
 
-  bigint *result = bigint_new_capacity(max_len + 1);
-  if (result == NULL) {
-    return NULL;
-  }
+  bigint_resize(result, max_len);
 
   Limb carry = 0;
   for (size_t i = 0; i < max_len; i++) {
@@ -218,64 +215,55 @@ bigint *bigint_add(const bigint *a, const bigint *b) {
   }
 
   if (carry) {
+    bigint_resize(result, result->len + 1);
     result->limbs[max_len] = carry;
   }
-  result->len = max_len + 1;
-  return result;
+  return Ok;
 }
 
 bool bigint_greater_than(const bigint *a, const bigint *b) {
-  bool res = true;
   if (bigint_equal(a, b)) {
-    res = false;
-  } else {
-    for (int i = a->len - 1; i >= 0; i--) {
-      if (a->limbs[i] < b->limbs[i]) {
-        res = false;
-        break;
-      } else if (a->limbs[i] > b->limbs[i]) {
-        res = true;
-        break;
-      }
+    return false;
+  }
+
+  const size_t min_len = (a->len > b->len) ? b->len : a->len;
+
+  for (int i = min_len - 1; i >= 0; i--) {
+    if (a->limbs[i] > b->limbs[i]) {
+      return true;
+    }
+    if (a->limbs[i] < b->limbs[i]) {
+      return false;
     }
   }
 
-  return res;
+  return false;
 }
 
 bool bigint_less_than(const bigint *a, const bigint *b) {
-  return !bigint_greater_than(a, b);
+  return bigint_greater_than(b, a);
 }
 
 bool bigint_equal(const bigint *a, const bigint *b) {
-  const size_t len_a = a->len;
-  const size_t len_b = b->len;
-  const size_t max_len = (len_a > len_b) ? len_a : len_b;
+  const size_t min_len = (a->len > b->len) ? b->len : a->len;
   size_t x = 0;
-  for (size_t i = 0; i < max_len; i++) {
-    Limb a_ = (i < len_a) ? a->limbs[i] : 0;
-    Limb b_ = (i < len_b) ? b->limbs[i] : 0;
-    x += (a_ != b_);
+  for (size_t i = 0; i < min_len; i++) {
+    x |= a->limbs[i] ^ b->limbs[i];
   }
   return x == 0;
 }
 
-bigint *bigint_sub(const bigint *a, const bigint *b) {
-  if (bigint_equal(a, b)) {
-    return bigint_init_hex("0");
-  }
+BigIntError bigint_sub(const bigint *a, const bigint *b, bigint *result) {
+
   if (bigint_less_than(a, b)) {
-    return NULL;
+    return NotImplemented;
   }
 
   const size_t len_a = a->len;
   const size_t len_b = b->len;
   const size_t len = len_a;
 
-  bigint *result = bigint_new_capacity(len + 1);
-  if (result == NULL) {
-    return NULL;
-  }
+  bigint_resize(result, len);
 
   Limb carry = 0;
   for (size_t i = 0; i < len; i++) {
@@ -290,5 +278,5 @@ bigint *bigint_sub(const bigint *a, const bigint *b) {
 
   result->len = len;
 
-  return result;
+  return Ok;
 }

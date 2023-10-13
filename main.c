@@ -8,20 +8,26 @@ typedef struct test_unary {
   char *b_hex;
   char *c_hex;
   bool upper;
-  bigint *(*function)(const bigint *);
+  BigIntError (*function)(const bigint *, bigint *);
   char *function_name;
 } test_unary;
 
 void test_unary_op(test_unary test) {
   printf("test %s... ", test.function_name);
-  bigint *a = bigint_init_hex(test.a_hex);
-  bigint *c = (bigint *)test.function(a);
-  char *actual = bigint_get_hex(c, test.upper);
-  check(test.c_hex, actual);
+  bigint a = BIGINT_ZERO;
+  bigint_set_hex(test.a_hex, &a);
+  bigint c = BIGINT_ZERO;
+  BigIntError result = test.function(&a, &c);
+  if (result != Ok) {
+    printf("%s\n", BigIntErrorStrings[result]);
+    exit(EXIT_FAILURE);
+  }
+  char *result_hex = bigint_get_hex(&c, test.upper);
+  check(test.c_hex, result_hex);
   printf("test passed\n");
-  // bigint_free(a);
-  // bigint_free(b);
-  // bigint_free(c);
+  bigint_free(&a);
+  bigint_free(&c);
+  free(result_hex);
 }
 
 typedef struct test_binary {
@@ -29,21 +35,27 @@ typedef struct test_binary {
   char *b_hex;
   char *c_hex;
   bool upper;
-  bigint *(*function)(const bigint *, const bigint *);
+  BigIntError (*function)(const bigint *, const bigint *, bigint *);
   char *function_name;
 } test_binary;
 
 void test_binary_op(test_binary test) {
   printf("test %s... ", test.function_name);
-  bigint *a = bigint_init_hex(test.a_hex);
-  bigint *b = bigint_init_hex(test.b_hex);
-  bigint *c = (bigint *)test.function(a, b);
-  char *actual = bigint_get_hex(c, test.upper);
+  bigint a = BIGINT_ZERO, b = BIGINT_ZERO, c = BIGINT_ZERO;
+  bigint_set_hex(test.a_hex, &a);
+  bigint_set_hex(test.b_hex, &b);
+  BigIntError result = test.function(&a, &b, &c);
+  if (result != Ok) {
+    printf("%s\n", BigIntErrorStrings[result]);
+    exit(EXIT_FAILURE);
+  }
+  char *actual = bigint_get_hex(&c, test.upper);
   check(test.c_hex, actual);
   printf("test passed\n");
-  // bigint_free(a);
-  // bigint_free(b);
-  // bigint_free(c);
+  bigint_free(&a);
+  bigint_free(&b);
+  bigint_free(&c);
+  free(actual);
 }
 
 typedef struct test_binary_size_t {
@@ -51,19 +63,25 @@ typedef struct test_binary_size_t {
   size_t amount;
   char *c_hex;
   bool upper;
-  bigint *(*function)(const bigint *, size_t);
+  BigIntError (*function)(const bigint *, size_t, bigint *);
   char *function_name;
 } test_binary_size_t;
 void test_binary_size_t_op(test_binary_size_t test) {
   printf("test %s... ", test.function_name);
-  bigint *a = bigint_init_hex(test.a_hex);
-  bigint *c = (bigint *)test.function(a, test.amount);
-  char *actual = bigint_get_hex(c, test.upper);
+  bigint a = BIGINT_ZERO;
+  bigint c = BIGINT_ZERO;
+  bigint_set_hex(test.a_hex, &a);
+  BigIntError result = test.function(&a, test.amount, &c);
+  if (result != Ok) {
+    printf("%s\n", BigIntErrorStrings[result]);
+    exit(EXIT_FAILURE);
+  }
+  char *actual = bigint_get_hex(&c, test.upper);
   check(test.c_hex, actual);
   printf("test passed\n");
-  // bigint_free(a);
-  // bigint_free(b);
-  // bigint_free(c);
+  bigint_free(&a);
+  bigint_free(&c);
+  free(actual);
 }
 
 int main() {
@@ -118,6 +136,22 @@ int main() {
       .upper = false,
       .function = bigint_bit_shiftl,
       .function_name = "shiftl",
+  });
+  test_binary_size_t_op((test_binary_size_t){
+      .a_hex = "1df999549df4f3bcd95a01a2443a",
+      .amount = 32,
+      .c_hex = "1df999549df4f3bcd95a",
+      .upper = false,
+      .function = bigint_bit_shiftr,
+      .function_name = "shiftr",
+  });
+  test_binary_size_t_op((test_binary_size_t){
+      .a_hex = "1df999549df4f3bcd95a01a2443a",
+      .amount = 112,
+      .c_hex = "0",
+      .upper = false,
+      .function = bigint_bit_shiftr,
+      .function_name = "shiftr",
   });
   test_binary_size_t_op((test_binary_size_t){
       .a_hex = "1df999549df4f3bcd95a01a2443a",
