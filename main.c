@@ -191,5 +191,17 @@ int main() {
       .function = bigint_sub,
       .function_name = "subtraction",
   });
+  test_binary_op((test_binary){
+      .a_hex =
+          "33ced2c76b26cae94e162c4c0d2c0ff7c13094b0185a3c122e732d5ba77efebc",
+      .b_hex =
+          "22e962951cb6cd2ce279ab0e2095825c141d48ef3ca9dabf253e38760b57fe03",
+      .c_hex =
+          "710b32fad9c4ff53fa1fa0d4bf11cd2df77dafe6cd9c097c3858d1c8f0fd1fceca1f"
+          "71fa8907df44ba9ffc4837bbcd37fa919893008811e067d64059d1f8434",
+      .upper = false,
+      .function = bigint_mul,
+      .function_name = "multiplication",
+  });
   return EXIT_SUCCESS;
 }
