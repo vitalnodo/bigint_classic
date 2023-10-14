@@ -9,15 +9,7 @@ typedef enum BigIntError {
 } BigIntError;
 extern const char *BigIntErrorStrings[];
 
-#if UINTPTR_MAX == 0xffffffffffffffff
-typedef uint64_t Limb;
-#elif UINTPTR_MAX == 0xffffffff
-typedef uint32_t Limb;
-#elif UINTPTR_MAX == 0xffff
-typedef uint16_t Limb;
-#else
-typedef uint8_t Limb;
-#endif
+typedef uintmax_t Limb;
 #define LIMB_SIZE_BYTES sizeof(Limb)
 #define LIMB_SIZE_BITS (LIMB_SIZE_BYTES * 8)
 #define MIN_LIMBS 4
