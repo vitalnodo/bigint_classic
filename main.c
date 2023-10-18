@@ -203,5 +203,13 @@ int main() {
       .function = bigint_mul,
       .function_name = "multiplication",
   });
+  bigint a = BIGINT_ZERO;
+  bigint b = BIGINT_ZERO;
+  bigint q = BIGINT_ZERO;
+  bigint r = BIGINT_ZERO;
+  printf("tesT dIVisIon...\n");
+  bigint_set_hex("18723461798234afafaf7af87afafbc7a", &a);
+  bigint_set_hex("1000000000000000000000000000", &b);
+  bigint_div(&a, &b, &q, &r);
   return EXIT_SUCCESS;
 }

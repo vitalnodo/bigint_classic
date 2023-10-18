@@ -8,12 +8,16 @@ Currently supported operations:
 * addition
 * subtraction
 * multiplication
+* baby division and modulo o_O
 * comparison
 
 There are also fun colored tests if any operation is poorly implemented.
 
 Planned:
 * codereview
-* modulo
-* division
-* modular exponentiation
+* normal modulo
+* normal division
+* modular exponentiation (Montgomery reduction?)
+
+# Don't use it 
+![https://knowyourmeme.com/memes/i-hate-the-antichrist](1.jpg)

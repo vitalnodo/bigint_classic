@@ -230,6 +230,20 @@ bool bigint_greater_than(const bigint *a, const bigint *b) {
 
   const size_t min_len = (a->len > b->len) ? b->len : a->len;
 
+  if(a->len > b->len) {
+    for (size_t i = min_len; i < a->len; i++) {
+      if(a->limbs[i]) {
+        return true;
+      }
+    }
+  } else if(b->len > a->len) {
+    for (size_t i = min_len; i < b->len; i++) {
+      if(b->limbs[i]) {
+        return false;
+      }
+    }
+  }
+
   for (int i = min_len - 1; i >= 0; i--) {
     if (a->limbs[i] > b->limbs[i]) {
       return true;
@@ -273,8 +287,8 @@ BigIntError bigint_sub(const bigint *a, const bigint *b, bigint *result) {
     Limb b_ = (i < len_b) ? b->limbs[i] : 0;
     Limb difference = a_ - b_;
     Limb res = difference - carry;
-    result->limbs[i] = res;
     carry = (difference > a->limbs[i]) | (res > difference);
+    result->limbs[i] = res;
   }
   result->limbs[len] = carry;
 
@@ -328,6 +342,37 @@ BigIntError bigint_mul(const bigint *a, const bigint *b, bigint *result) {
       result->limbs[i + j] += lo;
     }
     result->limbs[i + b->len] = carry;
+  }
+
+  return Ok;
+}
+
+static bool bigint_is_zero(const bigint *bi) {
+  for(size_t i = 0; i < bi->len; i++) {
+    if(bi->limbs[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+BigIntError bigint_div(const bigint *a, const bigint *b, bigint *q, bigint *r) {
+  if(bigint_is_zero(b)) {
+    return DivisionByZeroError;
+  }
+  
+  bigint_resize(q, a->len);
+  bigint_resize(r, a->len);
+  
+  memset(q->limbs, 0, LIMB_SIZE_BYTES * q->len);
+  memcpy(r->limbs, a->limbs, LIMB_SIZE_BYTES * r->len);
+
+  bigint one = BIGINT_ZERO;
+  bigint_set_hex("1", &one);
+
+  while(bigint_greater_than(r, b)) {
+    bigint_sub(r, b, r);
+    bigint_add(q, &one, q);
   }
 
   return Ok;
