@@ -68,10 +68,10 @@ typedef struct test_binary_size_t {
 } test_binary_size_t;
 void test_binary_size_t_op(test_binary_size_t test) {
   printf("test %s... ", test.function_name);
-  bigint a = BIGINT_ZERO;
+  bigint* a = bigint_new_capacity(MIN_LIMBS);
   bigint c = BIGINT_ZERO;
-  bigint_set_hex(test.a_hex, &a);
-  BigIntError result = test.function(&a, test.amount, &c);
+  bigint_set_hex(test.a_hex, a);
+  BigIntError result = test.function(a, test.amount, &c);
   if (result != Ok) {
     printf("%s\n", BigIntErrorStrings[result]);
     exit(EXIT_FAILURE);
@@ -79,7 +79,7 @@ void test_binary_size_t_op(test_binary_size_t test) {
   char *actual = bigint_get_hex(&c, test.upper);
   check(test.c_hex, actual);
   printf("test passed\n");
-  bigint_free(&a);
+  bigint_free(a);
   bigint_free(&c);
   free(actual);
 }

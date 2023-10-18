@@ -33,8 +33,10 @@ BigIntError bigint_resize(bigint *a, size_t len) {
     if (a->limbs == NULL) {
       return MemoryError;
     }
-    memset(a->limbs + a->len, 0, (len - a->len) * LIMB_SIZE_BYTES);
     a->capacity = len;
+  }
+  if (len > a->len) {
+    memset(a->limbs + a->len, 0, (len - a->len) * LIMB_SIZE_BYTES);
   }
   a->len = len;
   return Ok;
