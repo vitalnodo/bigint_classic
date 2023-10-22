@@ -361,6 +361,13 @@ BigIntError bigint_div(const bigint *a, const bigint *b, bigint *q, bigint *r) {
   if(bigint_is_zero(b)) {
     return DivisionByZeroError;
   }
+
+  if (bigint_less_than(a, b)) {
+    *q = BIGINT_ZERO;
+    bigint_resize(r, a->len);
+    memcpy(r->limbs, a->limbs, r->len);
+    return Ok;
+  }
   
   bigint_resize(q, a->len);
   bigint_resize(r, a->len);
