@@ -9,6 +9,7 @@ const char *BigIntErrorStrings[] = {
     "ResultMemoryTooSmall",
     "MemoryError",
     "NotImplemented",
+    "DivisionByZeroError"
 };
 
 bigint *bigint_new_capacity(size_t capacity) {
