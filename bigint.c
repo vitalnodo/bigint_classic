@@ -4,13 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char *BigIntErrorStrings[] = {
-    "Ok",
-    "ResultMemoryTooSmall",
-    "MemoryError",
-    "NotImplemented",
-    "DivisionByZeroError"
-};
+const char *BigIntErrorStrings[] = {"Ok", "ResultMemoryTooSmall", "MemoryError",
+                                    "NotImplemented", "DivisionByZeroError"};
 
 bigint *bigint_new_capacity(size_t capacity) {
   capacity = (capacity < MIN_LIMBS) ? MIN_LIMBS : capacity;
@@ -231,15 +226,15 @@ bool bigint_greater_than(const bigint *a, const bigint *b) {
 
   const size_t min_len = (a->len > b->len) ? b->len : a->len;
 
-  if(a->len > b->len) {
+  if (a->len > b->len) {
     for (size_t i = min_len; i < a->len; i++) {
-      if(a->limbs[i]) {
+      if (a->limbs[i]) {
         return true;
       }
     }
-  } else if(b->len > a->len) {
+  } else if (b->len > a->len) {
     for (size_t i = min_len; i < b->len; i++) {
-      if(b->limbs[i]) {
+      if (b->limbs[i]) {
         return false;
       }
     }
@@ -299,7 +294,7 @@ BigIntError bigint_sub(const bigint *a, const bigint *b, bigint *result) {
 }
 
 static void supermul(Limb a, Limb b, Limb *lo, Limb *hi) {
-#if defined(__x86_64__) || defined(__i386__)
+#if (defined(__x86_64__) || defined(__i386__) || defined(__GNUC__))
   __asm__("mul %%rbx" : "=a"(*lo), "=d"(*hi) : "a"(a), "b"(b), "d"(0) :);
 #else
   Limb aLo = a & ((1UL << (LIMB_SIZE_BITS / 2)) - 1);
@@ -349,47 +344,149 @@ BigIntError bigint_mul(const bigint *a, const bigint *b, bigint *result) {
 }
 
 static bool bigint_is_zero(const bigint *bi) {
-  for(size_t i = 0; i < bi->len; i++) {
-    if(bi->limbs[i]) {
+  for (size_t i = 0; i < bi->len; i++) {
+    if (bi->limbs[i]) {
       return false;
     }
   }
   return true;
 }
 
-BigIntError bigint_copy(const bigint* src, bigint *dst) {
+BigIntError bigint_copy(const bigint *src, bigint *dst) {
   BigIntError resize_result = bigint_resize(dst, src->len);
   if (resize_result != Ok) {
     return resize_result;
   }
-  memcpy(dst->limbs, src->limbs, src->len);
+  memcpy(dst->limbs, src->limbs, src->len * LIMB_SIZE_BYTES);
   return Ok;
 }
 
-BigIntError bigint_div(const bigint *a, const bigint *b, bigint *q, bigint *r) {
-  if(bigint_is_zero(b)) {
+static void bigint_fit(bigint *bi) {
+  while (bi->limbs[bi->len - 1] == 0) {
+    bi->len--;
+  }
+}
+
+BigIntError bigint_div(const bigint *A, const bigint *B, bigint *q, bigint *r) {
+  if (bigint_is_zero(B)) {
     return DivisionByZeroError;
   }
 
-  if (bigint_less_than(a, b)) {
+  if (bigint_less_than(A, B)) {
     *q = BIGINT_ZERO;
-    bigint_copy(a, r);
+    bigint_copy(A, r);
     return Ok;
   }
-  
-  bigint_resize(q, a->len);
-  bigint_resize(r, a->len);
-  
-  memset(q->limbs, 0, LIMB_SIZE_BYTES * q->len);
-  memcpy(r->limbs, a->limbs, LIMB_SIZE_BYTES * r->len);
 
-  bigint one = BIGINT_ZERO;
-  bigint_set_hex("1", &one);
+  bigint a = BIGINT_ZERO;
+  bigint b = BIGINT_ZERO;
 
-  while(bigint_greater_than(r, b)) {
-    bigint_sub(r, b, r);
-    bigint_add(q, &one, q);
+  bigint_copy(A, &a);
+  bigint_copy(B, &b);
+
+  bigint_fit(&a);
+  bigint_fit(&b);
+
+  if (b.len < 2) {
+    DoubleLimb partial = 0;
+
+    bigint_resize(q, a.len);
+    for (intmax_t i = a.len - 1; i >= 0; i--) {
+      partial = (partial << LIMB_SIZE_BITS) + a.limbs[i];
+      q->limbs[i] = partial / b.limbs[0];
+      partial %= b.limbs[0];
+    }
+
+    bigint_resize(r, 1);
+    r->limbs[0] = partial;
+
+    return Ok;
   }
+
+  bigint_resize(q, a.len);
+  bigint_resize(r, a.len);
+
+  intmax_t shifts = 0;
+
+  Limb vn = b.limbs[b.len - 1];
+  while (vn < (1UL << (LIMB_SIZE_BITS - 1))) {
+    vn <<= 1;
+    shifts++;
+  }
+
+  for (intmax_t i = b.len - 1; i > 0; i--) {
+    b.limbs[i] = (b.limbs[i] << shifts) |
+                 (((DoubleLimb)b.limbs[i - 1]) >> (LIMB_SIZE_BITS - shifts));
+  }
+  b.limbs[0] = b.limbs[0] << shifts;
+
+  bigint_resize(&a, a.len + 1);
+
+  a.limbs[a.len - 1] =
+      ((DoubleLimb)a.limbs[a.len - 2]) >> (LIMB_SIZE_BITS - shifts);
+  for (intmax_t i = a.len - 2; i > 0; i--) {
+    a.limbs[i] = (a.limbs[i] << shifts) |
+                 (((DoubleLimb)a.limbs[i - 1]) >> (LIMB_SIZE_BITS - shifts));
+  }
+  a.limbs[0] = a.limbs[0] << shifts;
+
+  static DoubleLimb uno = 1;
+  uno <<= LIMB_SIZE_BITS;
+
+  for (intmax_t k = a.len - b.len - 1; k >= 0; k--) {
+    DoubleLimb rhat = a.limbs[k + b.len];
+    rhat <<= LIMB_SIZE_BITS;
+    rhat += a.limbs[k + b.len - 1];
+
+    DoubleLimb qhat = rhat / b.limbs[b.len - 1];
+
+    rhat %= b.limbs[b.len - 1];
+
+    if (qhat == uno) {
+      qhat -= 1;
+      rhat += b.limbs[b.len - 1];
+    }
+
+    while (rhat < uno &&
+           (qhat * b.limbs[b.len - 2] > uno * rhat + a.limbs[k + b.len - 2])) {
+      qhat -= 1;
+      rhat += b.limbs[b.len - 1];
+    }
+
+    __int128_t carry = 0;
+    __int128_t widedigit;
+    for (uintmax_t i = 0; i < b.len; i++) {
+      DoubleLimb product = qhat * b.limbs[i];
+
+      widedigit = (a.limbs[k + i] + carry) - (product & (uno - 1));
+
+      a.limbs[k + i] = widedigit;
+
+      carry = (widedigit >> LIMB_SIZE_BITS) - (product >> LIMB_SIZE_BITS);
+    }
+
+    widedigit = a.limbs[k + b.len] + carry;
+    a.limbs[k + b.len] = widedigit;
+
+    q->limbs[k] = qhat;
+
+    if (widedigit < 0) {
+      q->limbs[k] -= 1;
+      widedigit = 0;
+      for (uintmax_t i = 0; i < b.len; i++) {
+        widedigit += a.limbs[k + i] + b.limbs[i];
+        a.limbs[k + i] = widedigit;
+        widedigit >>= LIMB_SIZE_BITS;
+      }
+      a.limbs[k + b.len] += carry;
+    }
+  }
+
+  for (uintmax_t i = 0; i < b.len - 1; i++) {
+    r->limbs[i] = (a.limbs[i] >> shifts) |
+                  (((DoubleLimb)a.limbs[i + 1]) << (LIMB_SIZE_BITS - shifts));
+  }
+  r->limbs[b.len - 1] = a.limbs[b.len - 1] >> shifts;
 
   return Ok;
 }

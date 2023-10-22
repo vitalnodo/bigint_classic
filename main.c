@@ -224,10 +224,13 @@ int main() {
       .function_name = "multiplication",
   });
   test_division_op((test_division){
-      .a_hex = "18723461798234afafaf7af87afafbc7a",
-      .b_hex = "1000000000000000000000000000",
-      .q_hex = "187234",
-      .r_hex = "61798234afafaf7af87afafbc7a",
+      .a_hex =
+          "84bcae70bc527cd3ad3c31cd062e642234abcd5abe6aa66e065ca7270169a39d3a36"
+          "ccd6ddb3fe5c14fff8a206da4e716c63eb4c1e4575ba1e56cc8f10aa6331",
+      .b_hex = "84ea0cac4f7ec5fd2b8f06c5d8573f6f5907849327187656",
+      .q_hex = "ffa89e5d1597f208d3de6c95d05568a3c47ea66888f92436940231c72aa55fe"
+               "d2a89bf52ddffba64",
+      .r_hex = "6fc77d9a4d59e75ed28a6f8609daf32e9399f799e777ad99",
       .function = bigint_div,
       .function_name = "division",
   });
