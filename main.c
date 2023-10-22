@@ -66,7 +66,7 @@ typedef struct test_shift {
 } test_shift;
 void test_shift_op(test_shift test) {
   printf("test %s... ", test.function_name);
-  bigint* a = bigint_new_capacity(MIN_LIMBS);
+  bigint *a = bigint_new_capacity(MIN_LIMBS);
   bigint c = BIGINT_ZERO;
   bigint_set_hex(test.a_hex, a);
   BigIntError result = test.function(a, test.amount, &c);
@@ -80,6 +80,40 @@ void test_shift_op(test_shift test) {
   bigint_free(a);
   bigint_free(&c);
   free(actual);
+}
+
+typedef struct test_division {
+  char *a_hex;
+  char *b_hex;
+  char *q_hex;
+  char *r_hex;
+  BigIntError (*function)(const bigint *, const bigint *, bigint *, bigint *);
+  char *function_name;
+} test_division;
+void test_division_op(test_division test) {
+  printf("test %s... ", test.function_name);
+  bigint a = BIGINT_ZERO;
+  bigint b = BIGINT_ZERO;
+  bigint q = BIGINT_ZERO;
+  bigint r = BIGINT_ZERO;
+  bigint_set_hex(test.a_hex, &a);
+  bigint_set_hex(test.b_hex, &b);
+  BigIntError result = test.function(&a, &b, &q, &r);
+  if (result != Ok) {
+    printf("%s\n", BigIntErrorStrings[result]);
+    exit(EXIT_FAILURE);
+  }
+  char *actual_q = bigint_get_hex(&q, UPPER);
+  check(test.q_hex, actual_q);
+  char *actual_r = bigint_get_hex(&r, UPPER);
+  check(test.r_hex, actual_r);
+  printf("test passed\n");
+  bigint_free(&a);
+  bigint_free(&b);
+  bigint_free(&q);
+  bigint_free(&r);
+  free(actual_q);
+  free(actual_r);
 }
 
 int main() {
@@ -189,13 +223,13 @@ int main() {
       .function = bigint_mul,
       .function_name = "multiplication",
   });
-  bigint a = BIGINT_ZERO;
-  bigint b = BIGINT_ZERO;
-  bigint q = BIGINT_ZERO;
-  bigint r = BIGINT_ZERO;
-  printf("tesT dIVisIon...\n");
-  bigint_set_hex("18723461798234afafaf7af87afafbc7a", &a);
-  bigint_set_hex("1000000000000000000000000000", &b);
-  bigint_div(&a, &b, &q, &r);
+  test_division_op((test_division){
+      .a_hex = "18723461798234afafaf7af87afafbc7a",
+      .b_hex = "1000000000000000000000000000",
+      .q_hex = "187234",
+      .r_hex = "61798234afafaf7af87afafbc7a",
+      .function = bigint_div,
+      .function_name = "division",
+  });
   return EXIT_SUCCESS;
 }
