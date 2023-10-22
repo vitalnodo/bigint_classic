@@ -8,15 +8,13 @@ Currently supported operations:
 * addition
 * subtraction
 * multiplication
-* baby division and modulo o_O
+* long division
 * comparison
 
 There are also fun colored tests if any operation is poorly implemented.
 
 Planned:
 * codereview
-* normal modulo
-* normal division
 * modular exponentiation (Montgomery reduction?)
 
 # Don't use it 
