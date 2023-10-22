@@ -58,4 +58,5 @@ bool bigint_greater_than(const bigint *a, const bigint *b);
 bool bigint_less_than(const bigint *a, const bigint *b);
 bool bigint_equal(const bigint *a, const bigint *b);
 BigIntError bigint_mul(const bigint *a, const bigint *b, bigint *result);
+BigIntError bigint_copy(const bigint* src, bigint *dst);
 BigIntError bigint_div(const bigint *a, const bigint *b, bigint *q, bigint *r);

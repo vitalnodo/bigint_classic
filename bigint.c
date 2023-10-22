@@ -357,6 +357,15 @@ static bool bigint_is_zero(const bigint *bi) {
   return true;
 }
 
+BigIntError bigint_copy(const bigint* src, bigint *dst) {
+  BigIntError resize_result = bigint_resize(dst, src->len);
+  if (resize_result != Ok) {
+    return resize_result;
+  }
+  memcpy(dst->limbs, src->limbs, src->len);
+  return Ok;
+}
+
 BigIntError bigint_div(const bigint *a, const bigint *b, bigint *q, bigint *r) {
   if(bigint_is_zero(b)) {
     return DivisionByZeroError;
@@ -364,8 +373,7 @@ BigIntError bigint_div(const bigint *a, const bigint *b, bigint *q, bigint *r) {
 
   if (bigint_less_than(a, b)) {
     *q = BIGINT_ZERO;
-    bigint_resize(r, a->len);
-    memcpy(r->limbs, a->limbs, r->len);
+    bigint_copy(a, r);
     return Ok;
   }
   
