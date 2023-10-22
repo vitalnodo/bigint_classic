@@ -57,14 +57,14 @@ void test_binary_op(test_binary test) {
   free(actual);
 }
 
-typedef struct test_binary_size_t {
+typedef struct test_shift {
   char *a_hex;
   size_t amount;
   char *c_hex;
   BigIntError (*function)(const bigint *, size_t, bigint *);
   char *function_name;
-} test_binary_size_t;
-void test_binary_size_t_op(test_binary_size_t test) {
+} test_shift;
+void test_shift_op(test_shift test) {
   printf("test %s... ", test.function_name);
   bigint* a = bigint_new_capacity(MIN_LIMBS);
   bigint c = BIGINT_ZERO;
@@ -123,28 +123,28 @@ int main() {
       .function = bigint_bit_and,
       .function_name = "and",
   });
-  test_binary_size_t_op((test_binary_size_t){
+  test_shift_op((test_shift){
       .a_hex = "ab",
       .amount = 32,
       .c_hex = "ab00000000",
       .function = bigint_bit_shiftl,
       .function_name = "shiftl",
   });
-  test_binary_size_t_op((test_binary_size_t){
+  test_shift_op((test_shift){
       .a_hex = "1df999549df4f3bcd95a01a2443a",
       .amount = 32,
       .c_hex = "1df999549df4f3bcd95a",
       .function = bigint_bit_shiftr,
       .function_name = "shiftr",
   });
-  test_binary_size_t_op((test_binary_size_t){
+  test_shift_op((test_shift){
       .a_hex = "1df999549df4f3bcd95a01a2443a",
       .amount = 112,
       .c_hex = "0",
       .function = bigint_bit_shiftr,
       .function_name = "shiftr",
   });
-  test_binary_size_t_op((test_binary_size_t){
+  test_shift_op((test_shift){
       .a_hex = "1df999549df4f3bcd95a01a2443a",
       .amount = 32,
       .c_hex = "1df999549df4f3bcd95a",
