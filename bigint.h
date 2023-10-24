@@ -53,7 +53,7 @@ typedef struct bigint {
 
 bigint *bigint_new_capacity(size_t capacity);
 BigIntError bigint_resize(bigint *a, size_t len);
-void bigint_free(bigint *bigint);
+void bigint_free_limbs(bigint *bigint);
 BigIntError bigint_set_hex(const char *hex, bigint *result);
 char *bigint_get_hex(const bigint *bigint, bool upper);
 BigIntError bigint_bit_not(const bigint *a, bigint *result);

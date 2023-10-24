@@ -25,8 +25,8 @@ void test_unary_op(test_unary test) {
   char *result_hex = bigint_get_hex(&c, UPPER);
   check(test.c_hex, result_hex);
   printf("test passed\n");
-  bigint_free(&a);
-  bigint_free(&c);
+  bigint_free_limbs(&a);
+  bigint_free_limbs(&c);
   free(result_hex);
 }
 
@@ -51,9 +51,9 @@ void test_binary_op(test_binary test) {
   char *actual = bigint_get_hex(&c, UPPER);
   check(test.c_hex, actual);
   printf("test passed\n");
-  bigint_free(&a);
-  bigint_free(&b);
-  bigint_free(&c);
+  bigint_free_limbs(&a);
+  bigint_free_limbs(&b);
+  bigint_free_limbs(&c);
   free(actual);
 }
 
@@ -77,8 +77,9 @@ void test_shift_op(test_shift test) {
   char *actual = bigint_get_hex(&c, UPPER);
   check(test.c_hex, actual);
   printf("test passed\n");
-  bigint_free(a);
-  bigint_free(&c);
+  bigint_free_limbs(a);
+  free(a);
+  bigint_free_limbs(&c);
   free(actual);
 }
 
@@ -108,10 +109,10 @@ void test_division_op(test_division test) {
   char *actual_r = bigint_get_hex(&r, UPPER);
   check(test.r_hex, actual_r);
   printf("test passed\n");
-  bigint_free(&a);
-  bigint_free(&b);
-  bigint_free(&q);
-  bigint_free(&r);
+  bigint_free_limbs(&a);
+  bigint_free_limbs(&b);
+  bigint_free_limbs(&q);
+  bigint_free_limbs(&r);
   free(actual_q);
   free(actual_r);
 }

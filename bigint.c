@@ -38,7 +38,7 @@ BigIntError bigint_resize(bigint *a, size_t len) {
   return Ok;
 }
 
-void bigint_free(bigint *bigint) {
+void bigint_free_limbs(bigint *bigint) {
   free(bigint->limbs);
   bigint->capacity = 0;
 }
@@ -175,7 +175,7 @@ BigIntError bigint_bit_shiftr(const bigint *a, size_t n, bigint *result) {
   size_t bit_shifts = n % LIMB_SIZE_BITS;
 
   if (limb_shifts >= a->len) {
-    bigint_free(result);
+    bigint_free_limbs(result);
     *result = BIGINT_ZERO;
     return Ok;
   }
@@ -270,22 +270,20 @@ BigIntError bigint_sub(const bigint *a, const bigint *b, bigint *result) {
     return NotImplemented;
   }
 
-  const size_t len_a = a->len;
-  const size_t len_b = b->len;
-  const size_t len = len_a;
+  const size_t len = a->len;
 
   bigint_resize(result, len);
 
   Limb carry = 0;
   for (size_t i = 0; i < len; i++) {
-    Limb a_ = (i < len_a) ? a->limbs[i] : 0;
-    Limb b_ = (i < len_b) ? b->limbs[i] : 0;
+    Limb a_ = (i < a->len) ? a->limbs[i] : 0;
+    Limb b_ = (i < b->len) ? b->limbs[i] : 0;
     Limb difference = a_ - b_;
     Limb res = difference - carry;
     carry = (difference > a->limbs[i]) | (res > difference);
     result->limbs[i] = res;
   }
-  result->limbs[len] = carry;
+  // carry == 0
 
   result->len = len;
 
@@ -486,6 +484,9 @@ BigIntError bigint_div(const bigint *A, const bigint *B, bigint *q, bigint *r) {
                   (((DoubleLimb)a.limbs[i + 1]) << (LIMB_SIZE_BITS - shifts));
   }
   r->limbs[b.len - 1] = a.limbs[b.len - 1] >> shifts;
+
+  bigint_free_limbs(&a);
+  bigint_free_limbs(&b);
 
   return Ok;
 }
