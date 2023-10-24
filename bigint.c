@@ -174,24 +174,23 @@ BigIntError bigint_bit_shiftr(const bigint *a, size_t n, bigint *result) {
   size_t limb_shifts = n / LIMB_SIZE_BITS;
   size_t bit_shifts = n % LIMB_SIZE_BITS;
 
-  size_t new_len = a->len - limb_shifts;
-  bigint_resize(result, new_len);
-
-  if (limb_shifts >= result->len) {
+  if (limb_shifts >= a->len) {
     bigint_free(result);
     *result = BIGINT_ZERO;
     return Ok;
   }
 
+  size_t new_len = a->len - limb_shifts;
+  bigint_resize(result, new_len);
+
   Limb carry = 0;
   for (size_t i = new_len - 1; i + 1 > 0; i--) {
     Limb shifted = (a->limbs[i + limb_shifts] >> bit_shifts) | carry;
     carry = (a->limbs[i + limb_shifts] << (LIMB_SIZE_BITS - bit_shifts));
-    if (LIMB_SIZE_BITS == n)
-      carry &= ((1 << bit_shifts) - 1);
+    if (bit_shifts == 0)
+      carry = 0;
     result->limbs[i] = shifted;
   }
-  result->len = new_len;
   return Ok;
 }
 

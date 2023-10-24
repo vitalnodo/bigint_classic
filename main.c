@@ -165,6 +165,13 @@ int main() {
       .function_name = "shiftl",
   });
   test_shift_op((test_shift){
+      .a_hex = "6f7c4912e56d4c7dfbcadea6e4da60",
+      .amount = 141,
+      .c_hex = "def89225cada98fbf795bd4dc9b4c000000000000000000000000000000000000",
+      .function = bigint_bit_shiftl,
+      .function_name = "shiftl",
+  });
+  test_shift_op((test_shift){
       .a_hex = "1df999549df4f3bcd95a01a2443a",
       .amount = 32,
       .c_hex = "1df999549df4f3bcd95a",
@@ -175,6 +182,22 @@ int main() {
       .a_hex = "1df999549df4f3bcd95a01a2443a",
       .amount = 112,
       .c_hex = "0",
+      .function = bigint_bit_shiftr,
+      .function_name = "shiftr",
+  });
+  test_shift_op((test_shift){
+      .a_hex =
+          "6f7c4912e56d4c7dfbcadea6e4da60fe6d2d3f52cfa5e60b5547e1fb737d870d",
+      .amount = 64,
+      .c_hex = "6f7c4912e56d4c7dfbcadea6e4da60fe6d2d3f52cfa5e60b",
+      .function = bigint_bit_shiftr,
+      .function_name = "shiftr",
+  });
+  test_shift_op((test_shift){
+      .a_hex =
+          "6f7c4912e56d4c7dfbcadea6e4da60fe6d2d3f52cfa5e60b5547e1fb737d870d",
+      .amount = 128,
+      .c_hex = "6f7c4912e56d4c7dfbcadea6e4da60fe",
       .function = bigint_bit_shiftr,
       .function_name = "shiftr",
   });
