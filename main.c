@@ -129,6 +129,27 @@ void test_bit_length() {
   bigint_free_limbs(&a);
 }
 
+void test_montgomery() {
+  printf("test montgomery... ");
+  bigint modulus = BIGINT_ZERO;
+  bigint_set_hex("979efd66ad4419169c5b34413", &modulus);
+  bigint expected_rrm = BIGINT_ZERO;
+  bigint_set_hex("78da46e5dbfd3aef0613394da", &expected_rrm);
+  Montgomery m;
+  m.modulus = BIGINT_ZERO;
+  m.rrm = BIGINT_ZERO;
+  bigint_montgomery_init(&modulus, &m);
+  if (!bigint_equal(&expected_rrm, &m.rrm)) {
+    printf("Error. rrm not equals\n");
+    exit(EXIT_FAILURE);
+  }
+  if (m.n != 100) {
+    printf("Error. n should be equal 100\n");
+    exit(EXIT_FAILURE);
+  }
+  bigint_free_limbs(&modulus);
+}
+
 int main() {
   test_unary_op((test_unary){
       .a_hex =
@@ -279,5 +300,6 @@ int main() {
       .function_name = "division",
   });
   test_bit_length();
+  test_montgomery();
   return EXIT_SUCCESS;
 }

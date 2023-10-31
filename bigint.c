@@ -503,3 +503,21 @@ size_t bigint_bit_length(const bigint *a) {
   }
   return 0;
 }
+
+BigIntError bigint_montgomery_init(const bigint *modulus, Montgomery *m) {
+  if (bigint_is_zero(modulus)) {
+    return DivisionByZeroError;
+  }
+  if ((modulus->limbs[0] & 1) == 0) {
+    return NotImplemented;
+  }
+  m->modulus = *modulus;
+  m->n = bigint_bit_length(modulus);
+  bigint dividend = BIGINT_ZERO;
+  bigint_resize(&dividend, m->n * 2 / LIMB_SIZE_BITS + 1);
+  dividend.limbs[m->n * 2 / LIMB_SIZE_BITS] = (1ul << ((m->n * 2) % LIMB_SIZE_BITS));
+
+  bigint q = BIGINT_ZERO;
+  bigint_div(&dividend, modulus, &q, &m->rrm);
+  return Ok;
+}

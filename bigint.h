@@ -74,3 +74,9 @@ BigIntError bigint_mul(const bigint *a, const bigint *b, bigint *result);
 BigIntError bigint_copy(const bigint *src, bigint *dst);
 BigIntError bigint_div(const bigint *a, const bigint *b, bigint *q, bigint *r);
 size_t bigint_bit_length(const bigint *a);
+typedef struct Montgomery {
+    bigint modulus;
+    bigint rrm;
+    size_t n;
+} Montgomery;
+BigIntError bigint_montgomery_init(const bigint* modulus, Montgomery *m);
