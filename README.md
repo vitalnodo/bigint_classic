@@ -10,12 +10,14 @@ Currently supported operations:
 * multiplication
 * long division
 * comparison
+* montgomery reduce and multiplication
 
 There are also fun colored tests if any operation is poorly implemented.
 
 Planned:
 * codereview
-* modular exponentiation (Montgomery reduction?)
+* montgomery exponentiation
+* [Montgomery reduction with even modulus](https://cetinkayakoc.net/docs/j34.pdf)
 
 # Don't use it 
 ![https://knowyourmeme.com/memes/i-hate-the-antichrist](1.jpg)

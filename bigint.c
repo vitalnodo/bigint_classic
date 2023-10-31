@@ -521,3 +521,25 @@ BigIntError bigint_montgomery_init(const bigint *modulus, Montgomery *m) {
   bigint_div(&dividend, modulus, &q, &m->rrm);
   return Ok;
 }
+
+BigIntError bigint_montgomery_reduce(const Montgomery *m, const bigint* a, bigint* result) {
+  bigint_copy(a, result);
+  for (size_t i = 0; i < m->n; i++) {
+    if ((result->limbs[0] & 1) == 1) {
+      bigint_add(result, &m->modulus, result);
+    }
+    bigint_bit_shiftr(result, 1, result);
+  }
+
+  if (bigint_equal(result, &m->modulus) || bigint_greater_than(result, &m->modulus)) {
+    bigint_sub(result, &m->modulus, result);
+  }
+  return Ok;
+}
+
+
+BigIntError bigint_montgomery_mul(const Montgomery *m, const bigint* r1, const bigint* r2, bigint* result) {
+  bigint_mul(r1, r2, result);
+  bigint_montgomery_reduce(m, result, result);
+  return Ok;
+}

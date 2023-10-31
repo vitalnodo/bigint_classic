@@ -80,3 +80,5 @@ typedef struct Montgomery {
     size_t n;
 } Montgomery;
 BigIntError bigint_montgomery_init(const bigint* modulus, Montgomery *m);
+BigIntError bigint_montgomery_reduce(const Montgomery *m, const bigint* a, bigint* result);
+BigIntError bigint_montgomery_mul(const Montgomery *m, const bigint* r1, const bigint* r2, bigint* result);

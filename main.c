@@ -129,6 +129,16 @@ void test_bit_length() {
   bigint_free_limbs(&a);
 }
 
+bool bigint_equal_hex(const bigint* a, char* hex) {
+  bigint bigint_from_hex = BIGINT_ZERO;
+  bigint_set_hex(hex, &bigint_from_hex);
+  if (!bigint_equal(a, &bigint_from_hex)) {
+    return false;
+  }
+  bigint_free_limbs(&bigint_from_hex);
+  return true;
+}
+
 void test_montgomery() {
   printf("test montgomery... ");
   bigint modulus = BIGINT_ZERO;
@@ -147,7 +157,41 @@ void test_montgomery() {
     printf("Error. n should be equal 100\n");
     exit(EXIT_FAILURE);
   }
+
+  bigint x1 = BIGINT_ZERO;
+  bigint_set_hex("6d0e5e4b23a854021124f3dbe", &x1);
+  bigint t1 = BIGINT_ZERO;
+  bigint_mul(&x1, &m.rrm, &t1);
+  bigint r1 = BIGINT_ZERO;
+  bigint_montgomery_reduce(&m, &t1, &r1);
+  bigint x2 = BIGINT_ZERO;
+  bigint_set_hex("6824a837539e97a07d95963a1", &x2);
+  bigint t2 = BIGINT_ZERO;
+  bigint_mul(&x2, &m.rrm, &t2);
+  bigint r2 = BIGINT_ZERO;
+  bigint_montgomery_reduce(&m, &t2, &r2);
+  if (!bigint_equal_hex(&r1, "58e3bd6d7580be7cc4a3686f5") 
+    || !bigint_equal_hex(&r2, "57ebb868592ea9305b1464237")) {
+    printf("Error in reduce\n");
+    exit(EXIT_FAILURE);
+  }
+
+  bigint montgomery_mul = BIGINT_ZERO;
+  bigint_montgomery_mul(&m, &r1, &r2, &montgomery_mul);
+  bigint_montgomery_reduce(&m, &montgomery_mul, &montgomery_mul);
+  if (!bigint_equal_hex(&montgomery_mul, "93cfd5fd5b63b5db26b65aa6d")) {
+    printf("Error in multiplication\n");
+    exit(EXIT_FAILURE);
+  }
+  printf("test passed\n");
   bigint_free_limbs(&modulus);
+  bigint_free_limbs(&m.rrm);
+  bigint_free_limbs(&x1);
+  bigint_free_limbs(&t1);
+  bigint_free_limbs(&r1);
+  bigint_free_limbs(&x2);
+  bigint_free_limbs(&t2);
+  bigint_free_limbs(&r2);
 }
 
 int main() {
