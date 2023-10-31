@@ -117,6 +117,18 @@ void test_division_op(test_division test) {
   free(actual_r);
 }
 
+void test_bit_length() {
+  printf("test bit_length... ");
+  bigint a = BIGINT_ZERO;
+  bigint_set_hex("c8f80adf8bc5e367bbb77eaac3cae1a12ff5c50411d705ef6df99f6154e3cbc", &a);
+  if (bigint_bit_length(&a) != 252) {
+    printf("%lu\n", bigint_bit_length(&a));
+    exit(EXIT_FAILURE);
+  }
+  printf("test passed\n");
+  bigint_free_limbs(&a);
+}
+
 int main() {
   test_unary_op((test_unary){
       .a_hex =
@@ -266,5 +278,6 @@ int main() {
       .function = bigint_div,
       .function_name = "division",
   });
+  test_bit_length();
   return EXIT_SUCCESS;
 }

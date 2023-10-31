@@ -490,3 +490,16 @@ BigIntError bigint_div(const bigint *A, const bigint *B, bigint *q, bigint *r) {
 
   return Ok;
 }
+
+size_t bigint_bit_length(const bigint *a) {
+  for (size_t i = a->len - 1; i + 1 > 0; i--) {
+    if (a->limbs[i] != 0) {
+      for (size_t bit = LIMB_SIZE_BITS - 1; bit + 1 > 0; bit--) {
+        if (a->limbs[i] & (1ul << bit)) {
+          return i * LIMB_SIZE_BITS + bit + 1;
+        }
+      }
+    }
+  }
+  return 0;
+}
