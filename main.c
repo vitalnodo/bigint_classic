@@ -258,5 +258,13 @@ int main() {
       .function = bigint_div,
       .function_name = "division",
   });
+  test_division_op((test_division){
+      .a_hex = "74dec379409ad5e600e5c30f98b166b0c2eb69a991fc6efcb8e45e5e4786ef51",
+      .b_hex = "d0387fb184f98bf9cd4da7105925a8269b4d5f6029893e",
+      .q_hex = "8fb0105ab2cf786e4e",
+      .r_hex = "6c161380d20c61b77184d51a257a192bdbed6faad67a6d",
+      .function = bigint_div,
+      .function_name = "division",
+  });
   return EXIT_SUCCESS;
 }

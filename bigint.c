@@ -427,7 +427,7 @@ BigIntError bigint_div(const bigint *A, const bigint *B, bigint *q, bigint *r) {
   }
   a.limbs[0] = a.limbs[0] << shifts;
 
-  static DoubleLimb uno = 1;
+  DoubleLimb uno = 1;
   uno <<= LIMB_SIZE_BITS;
 
   for (intmax_t k = a.len - b.len - 1; k >= 0; k--) {
