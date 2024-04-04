@@ -18,6 +18,3 @@ Planned:
 * codereview
 * montgomery exponentiation
 * [Montgomery reduction with even modulus](https://cetinkayakoc.net/docs/j34.pdf)
-
-# Don't use it 
-![https://knowyourmeme.com/memes/i-hate-the-antichrist](1.jpg)
