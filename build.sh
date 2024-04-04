@@ -1,1 +1,1 @@
-cc -Wall -Wextra -Werror -pedantic -std=c99 -g bigint.c utils.c main.c -o main && ./main
+cc -Wall -Wextra -Werror -pedantic -std=c99 -g bigint.c bigint_mul.c utils.c main.c -o main && ./main
