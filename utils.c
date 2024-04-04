@@ -41,8 +41,9 @@ void check(char *expected, char *actual) {
     int i, len = strlen(expected);
 
     printf("\nExpected: %s\n", expected);
+    printf("Actual  : %s\n", actual);
 
-    printf("Actual  : ");
+    printf("Compare : ");
     for (i = 0; i < len; i++) {
       if (expected[i] == actual[i]) {
         printf("\033[32m%c\033[0m", expected[i]);
