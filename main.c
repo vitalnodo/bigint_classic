@@ -321,8 +321,18 @@ int main() {
       .c_hex =
           "710b32fad9c4ff53fa1fa0d4bf11cd2df77dafe6cd9c097c3858d1c8f0fd1fceca1f"
           "71fa8907df44ba9ffc4837bbcd37fa919893008811e067d64059d1f8434",
-      .function = bigint_mul,
-      .function_name = "multiplication",
+      .function = bigint_mul_classic,
+      .function_name = "multiplication classic",
+  });
+  test_binary_op((test_binary){
+      .a_hex =
+          "832216813b87421df33b96a2788e7d2dd6dd18a3156c3c0ff1eb02f2791a92c00f00c8ea982b01644",
+      .b_hex =
+          "ac3275fd7b795c095adf923c207057904a8037bf854fe6239aabdacdccc46dafa8103ca031f7340a4",
+      .c_hex =
+          "5834c037a57559d574ae6fc1d0f2477d7343c4d6e621cf0b30823e1b0f732c8e0b24d43d42d0083ca56f92b03ccdd053efb64cd513dcd388e2fb31fc669a1b94604779f5b425f01e53891cb7dbfaeb4390",
+      .function = bigint_mul_karatsuba,
+      .function_name = "multiplication karatsuba",
   });
   test_division_op((test_division){
       .a_hex =

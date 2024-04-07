@@ -82,3 +82,6 @@ typedef struct Montgomery {
 BigIntError bigint_montgomery_init(const bigint* modulus, Montgomery *m);
 BigIntError bigint_montgomery_reduce(const Montgomery *m, const bigint* a, bigint* result);
 BigIntError bigint_montgomery_mul(const Montgomery *m, const bigint* r1, const bigint* r2, bigint* result);
+size_t calc_needed_limbs_for_hex(size_t hex_len);
+BigIntError bigint_mul_karatsuba(const bigint *a, const bigint *b, bigint *result);
+BigIntError bigint_mul_classic(const bigint *a, const bigint *b, bigint *result);
