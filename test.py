@@ -35,6 +35,8 @@ def prepare_buffer(num):
 def test_binary_op(t, python_op, lib_op):
     a = rand(BITS)
     b = rand(BITS)
+    if b > a:
+        a, b = b, a
     expected = python_op(a, b)
     bigint_a = lib.bigint_new_capacity(0)
     bigint_b = lib.bigint_new_capacity(0)
@@ -78,6 +80,7 @@ class TestLib(unittest.TestCase):
     def test_binary(self):
         for i in range(TESTS):
             test_binary_op(self, lambda x,y: x+y, lib.bigint_add)
+            test_binary_op(self, lambda x,y: x-y, lib.bigint_sub)
 
 if __name__ == '__main__':
     unittest.main()
