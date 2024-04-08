@@ -41,7 +41,6 @@ typedef struct bigint {
   const size_t max_len = (a->len > b->len) ? a->len : b->len;                  \
   bigint *c = RESULT;                                                          \
   bigint_resize(c, max_len);                                                   \
-  memset(c->limbs, 0, c->capacity);                                            \
   for (size_t i = 0; i < max_len; i++) {                                       \
     c->limbs[i] = (i < a->len ? a->limbs[i] : 0) OPERATOR                      \
                   (i < b->len ? b->limbs[i] : 0);                              \
