@@ -36,20 +36,19 @@ typedef struct bigint {
 #define BIGINT_ZERO ((bigint){0})
 
 #define BINARY_BIT_OPERATION(FIRST, SECOND, OPERATOR, RESULT)                  \
-  const bigint *a = first;                                                     \
-  const bigint *b = second;                                                    \
-  bigint *c = result;                                                          \
-  bigint_resize(c, a->len);                                                    \
-  if (second->len > first->len) {                                              \
-    a = second;                                                                \
-    b = first;                                                                 \
-  }                                                                            \
+  const bigint *a = FIRST;                                                     \
+  const bigint *b = SECOND;                                                    \
+  const size_t max_len = (a->len > b->len) ? a->len : b->len;                  \
+  bigint *c = RESULT;                                                          \
+  bigint_resize(c, max_len);                                                   \
   memset(c->limbs, 0, c->capacity);                                            \
-  for (size_t i = 0; i < b->len; i++) {                                        \
-    c->limbs[i] = a->limbs[i] OPERATOR b->limbs[i];                            \
+  for (size_t i = 0; i < max_len; i++) {                                       \
+    c->limbs[i] = (i < a->len ? a->limbs[i] : 0) OPERATOR                      \
+                  (i < b->len ? b->limbs[i] : 0);                              \
   }                                                                            \
-  c->len = a->len;                                                             \
+  c->len = max_len;                                                            \
   return Ok;
+
 
 bigint *bigint_new_capacity(size_t capacity);
 BigIntError bigint_resize(bigint *a, size_t len);
