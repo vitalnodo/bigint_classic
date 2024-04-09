@@ -5,7 +5,7 @@ import math
 
 random.seed(12345)
 TESTS = 25
-BITS = 256
+BITS = 4096
 lib = ctypes.CDLL("./bigint.so")
 Limb = ctypes.c_uint64
 
