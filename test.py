@@ -82,5 +82,30 @@ class TestLib(unittest.TestCase):
             test_binary_op(self, lambda x,y: x+y, lib.bigint_add)
             test_binary_op(self, lambda x,y: x-y, lib.bigint_sub)
 
+    def test_shifts(self):
+        for i in range(TESTS):
+            a = rand(BITS)
+            for i in range(0,a.bit_length()+1):
+                bigint_a = lib.bigint_new_capacity(0)
+                bigint_res = lib.bigint_new_capacity(0)
+                lib.bigint_set_hex(prepare_buffer(a), bigint_a)
+                lib.bigint_bit_shiftr(bigint_a, i, bigint_res)
+                expected = hex(a >> i)[2:].encode()
+                actual = lib.bigint_get_hex(bigint_res, False)
+                self.assertEqual(expected, actual)
+                lib.bigint_free_limbs(bigint_a)
+                lib.bigint_free_limbs(bigint_res)
+
+                bigint_a = lib.bigint_new_capacity(0)
+                bigint_res = lib.bigint_new_capacity(0)
+                lib.bigint_set_hex(prepare_buffer(a), bigint_a)
+                lib.bigint_bit_shiftl(bigint_a, i, bigint_res)
+                expected = hex(a << i)[2:].encode()
+                actual = lib.bigint_get_hex(bigint_res, False)
+                self.assertEqual(expected, actual)
+                lib.bigint_free_limbs(bigint_a)
+                lib.bigint_free_limbs(bigint_res)
+
+
 if __name__ == '__main__':
     unittest.main()
