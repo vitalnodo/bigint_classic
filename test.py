@@ -71,14 +71,11 @@ class TestLib(unittest.TestCase):
             self.assertEqual(expected, got_hex)
             lib.bigint_free_limbs(bigint)
 
-    def test_binary_bitwise(self):
+    def test_binary(self):
         for i in range(TESTS):
             test_binary_op(self, lambda x,y: x^y, lib.bigint_bit_xor)
             test_binary_op(self, lambda x,y: x|y, lib.bigint_bit_or)
             test_binary_op(self, lambda x,y: x&y, lib.bigint_bit_and)
-
-    def test_binary(self):
-        for i in range(TESTS):
             test_binary_op(self, lambda x,y: x+y, lib.bigint_add)
             test_binary_op(self, lambda x,y: x-y, lib.bigint_sub)
 
