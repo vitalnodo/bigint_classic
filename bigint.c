@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 const char *BigIntErrorStrings[] = {"Ok", "ResultMemoryTooSmall", "MemoryError",
                                     "NotImplemented", "DivisionByZeroError"};
@@ -150,25 +151,27 @@ BigIntError bigint_bit_and(const bigint *first, const bigint *second,
 BigIntError bigint_bit_shiftl(const bigint *a, size_t n, bigint *result) {
   size_t limb_shifts = n / LIMB_SIZE_BITS;
   size_t bit_shifts = n % LIMB_SIZE_BITS;
-
-  size_t new_len = a->len + limb_shifts;
-
-  bigint_resize(result, new_len);
-
-  Limb carry = 0;
-  for (size_t i = 0; i < a->len; i++) {
-    Limb shifted = (a->limbs[i] << bit_shifts) | carry;
-    carry = (a->limbs[i] >> (LIMB_SIZE_BITS - bit_shifts)) &
-            ((1 << bit_shifts) - 1);
-    result->limbs[i + limb_shifts] = shifted;
+  
+  size_t offset = (n + LIMB_SIZE_BITS - 1) / LIMB_SIZE_BITS;
+  
+  bigint_resize(result, a->len + offset);
+  
+  if(n % CHAR_BIT == 0) {
+    memcpy((uint8_t*) result->limbs + n / CHAR_BIT, a->limbs, a->len * sizeof(Limb));
+  } else {
+    for (size_t i = 0; i < a->len; i++) {
+      result->limbs[i + limb_shifts] = 0;
+      result->limbs[i + limb_shifts] |= a->limbs[i] << bit_shifts;
+      if(i > 0) {
+        result->limbs[i + limb_shifts] |= a->limbs[i - 1] >> (LIMB_SIZE_BITS - bit_shifts);
+    }
+    }
+    result->limbs[a->len + limb_shifts] = a->limbs[a->len - 1] >> (LIMB_SIZE_BITS - bit_shifts);
   }
-  if (carry > 0) {
-    result->limbs[a->len + limb_shifts] = carry;
-    new_len++;
-  }
-  result->len = new_len;
+  
   return Ok;
 }
+
 
 BigIntError bigint_bit_shiftr(const bigint *a, size_t n, bigint *result) {
   size_t limb_shifts = n / LIMB_SIZE_BITS;
