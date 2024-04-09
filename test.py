@@ -78,6 +78,7 @@ class TestLib(unittest.TestCase):
             test_binary_op(self, lambda x,y: x&y, lib.bigint_bit_and)
             test_binary_op(self, lambda x,y: x+y, lib.bigint_add)
             test_binary_op(self, lambda x,y: x-y, lib.bigint_sub)
+            test_binary_op(self, lambda x,y: x*y, lib.bigint_mul_classic)
 
     def test_shifts(self):
         for i in range(TESTS):
