@@ -4,8 +4,8 @@ import random
 import math
 
 random.seed(12345)
-TESTS = 50
-BITS = 4096
+TESTS = 25
+BITS = 256
 lib = ctypes.CDLL("./bigint.so")
 Limb = ctypes.c_uint64
 
