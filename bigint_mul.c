@@ -3,7 +3,7 @@
 #include <string.h>
 
 static void supermul(Limb a, Limb b, Limb *lo, Limb *hi) {
-#if (defined(__x86_64__) || defined(__i386__) || defined(__GNUC__))
+#if ((defined(__x86_64__) || defined(__i386__) || defined(__GNUC__))) && LIMB_SIZE_BITS == 64
   __asm__("mul %%rbx" : "=a"(*lo), "=d"(*hi) : "a"(a), "b"(b), "d"(0) :);
 #else
   Limb aLo = a & ((1UL << (LIMB_SIZE_BITS / 2)) - 1);
@@ -52,7 +52,8 @@ BigIntError bigint_mul_classic(const bigint *a, const bigint *b, bigint *result)
   return Ok;
 }
 
-BigIntError bigint_mul_karatsuba(const bigint *a, const bigint *b, bigint *result) {
+BigIntError bigint_mul_karatsuba_internal(const bigint *a, 
+  const bigint *b, bigint *result) {
   if (a->len <= MIN_LIMBS && b->len <= MIN_LIMBS) {
     return bigint_mul_classic(a, b, result);
   }
@@ -121,6 +122,19 @@ BigIntError bigint_mul_karatsuba(const bigint *a, const bigint *b, bigint *resul
   bigint_free_limbs(c1_1);
   bigint_free_limbs(tmp);
   return Ok;
+}
+
+BigIntError bigint_mul_karatsuba(const bigint *a, 
+  const bigint *b, bigint *result) {
+    bigint *a_copy = bigint_new_capacity(0);
+    bigint *b_copy = bigint_new_capacity(0);
+    bigint_copy(a, a_copy);
+    bigint_copy(b, b_copy);
+    const size_t max_len = (a->len > b->len) ? a->len : b->len;
+    bigint_resize(a_copy, max_len);
+    bigint_resize(b_copy, max_len);
+    bigint_mul_karatsuba_internal(a_copy, b_copy, result);
+    return Ok;
 }
 
 BigIntError bigint_mul(const bigint *a, const bigint *b, bigint *result) {

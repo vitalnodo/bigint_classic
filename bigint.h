@@ -13,19 +13,25 @@ extern const char *BigIntErrorStrings[];
 #if UINTPTR_MAX == 0xFFFFFFFFFFFFFFFF
 typedef uint64_t Limb;
 typedef __uint128_t DoubleLimb;
+#define LIMB_SIZE_BYTES 8
+#define LIMB_SIZE_BITS (LIMB_SIZE_BYTES * 8)
 #elif UINTPTR_MAX == 0xFFFFFFFF
 typedef uint32_t Limb;
 typedef uint64_t DoubleLimb;
+#define LIMB_SIZE_BYTES 4
+#define LIMB_SIZE_BITS (LIMB_SIZE_BYTES * 8)
 #elif UINTPTR_MAX == 0xFFFF
 typedef uint16_t Limb;
 typedef uint32_t DoubleLimb;
+#define LIMB_SIZE_BYTES 2
+#define LIMB_SIZE_BITS (LIMB_SIZE_BYTES * 8)
 #elif UINTPTR_MAX == 0xFF
 typedef uint8_t Limb;
 typedef uint16_t DoubleLimb;
+#define LIMB_SIZE_BYTES 1
+#define LIMB_SIZE_BITS (LIMB_SIZE_BYTES * 8)
 #endif
 
-#define LIMB_SIZE_BYTES sizeof(Limb)
-#define LIMB_SIZE_BITS (LIMB_SIZE_BYTES * 8)
 #define MIN_LIMBS 4
 
 typedef struct bigint {

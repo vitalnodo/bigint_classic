@@ -82,6 +82,33 @@ class TestLib(unittest.TestCase):
             test_binary_op(self, lambda x,y: x+y, lib.bigint_add)
             test_binary_op(self, lambda x,y: x-y, lib.bigint_sub)
             test_binary_op(self, lambda x,y: x*y, lib.bigint_mul_classic)
+            test_binary_op(self, lambda x,y: x*y, lib.bigint_mul_karatsuba)
+    
+    def test_division(self):
+        for i in range(TESTS):
+            a = rand(BITS)
+            b = rand(BITS)
+            if b > a:
+                a, b = b, a
+            bigint_a = lib.bigint_new_capacity(0)
+            bigint_b = lib.bigint_new_capacity(0)
+            lib.bigint_set_hex(prepare_buffer(a), bigint_a)
+            lib.bigint_set_hex(prepare_buffer(b), bigint_b)
+            bigint_q = lib.bigint_new_capacity(0)
+            bigint_r = lib.bigint_new_capacity(0)
+
+            lib.bigint_div(bigint_a, bigint_b, bigint_q, bigint_r)
+            expected_q = hex(a // b)[2:].encode()
+            expected_r = hex(a % b)[2:].encode()
+            actual_q = lib.bigint_get_hex(bigint_q)
+            actual_r = lib.bigint_get_hex(bigint_r)
+            self.assertEqual(expected_q, actual_q)
+
+            lib.bigint_free_limbs(bigint_a)
+            lib.bigint_free_limbs(bigint_b)
+            lib.bigint_free_limbs(bigint_q)
+            lib.bigint_free_limbs(bigint_r)
+            
 
     def test_shifts(self):
         for i in range(TESTS):
