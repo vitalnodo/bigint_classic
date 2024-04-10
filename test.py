@@ -6,7 +6,9 @@ import math
 random.seed(12345)
 TESTS = 25
 BITS = 4096
+assert BITS >= 64
 lib = ctypes.CDLL("./bigint.so")
+LIMB_SIZE_BITS = 64
 Limb = ctypes.c_uint64
 
 class Bigint(ctypes.Structure):
@@ -26,7 +28,7 @@ def rand(bits):
     return random.getrandbits(bits)
 
 def bit_not(num, bits=BITS):
-    return ~num & ((1 << bits) - 1)
+    return num ^ ((1 << bits) - 1)
 
 def prepare_buffer(num):
     hex_ = hex(num)[2:].lstrip("0").encode()
@@ -66,7 +68,8 @@ class TestLib(unittest.TestCase):
 
             tmp = lib.bigint_new_capacity(0)
             lib.bigint_bit_not(bigint, tmp)
-            expected = hex(bit_not(some_number_))[2:].encode()
+            b = bigint.contents.len * LIMB_SIZE_BITS
+            expected = hex(bit_not(some_number_, b))[2:].encode()
             got_hex = lib.bigint_get_hex(tmp, False)
             self.assertEqual(expected, got_hex)
             lib.bigint_free_limbs(bigint)
