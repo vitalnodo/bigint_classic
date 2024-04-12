@@ -6,7 +6,6 @@ import math
 random.seed(12345)
 TESTS = 25
 BITS = 4096
-assert BITS >= 64
 lib = ctypes.CDLL("./bigint.so")
 LIMB_SIZE_BITS = 64
 Limb = ctypes.c_uint64
@@ -32,6 +31,8 @@ def bit_not(num, bits=BITS):
 
 def prepare_buffer(num):
     hex_ = hex(num)[2:].lstrip("0").encode()
+    if not hex_:
+        hex_ = b'0'
     return ctypes.create_string_buffer(hex_)
 
 def test_binary_op(t, python_op, lib_op):
@@ -88,6 +89,9 @@ class TestLib(unittest.TestCase):
         for i in range(TESTS):
             a = rand(BITS)
             b = rand(BITS)
+            while a == 0 or b == 0:
+                a = rand(BITS)
+                b = rand(BITS)
             if b > a:
                 a, b = b, a
             bigint_a = lib.bigint_new_capacity(0)

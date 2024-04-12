@@ -3,21 +3,23 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *ltrim(char *const s) {
+void ltrim(char* s) {
   if (s && *s) {
-    size_t len = strlen(s);
-    char *cur = s;
-
-    while (*cur && *cur == '0') {
-      ++cur;
-      --len;
+    char *res = s;
+    while ('0' == *res) {
+        ++res;
     }
 
-    if (s != cur)
-      memmove(s, cur, len + 1);
-  }
+    if (res == s) {
+      return;
+    }
 
-  return s;
+    if ('\0' == *res) {
+        --res;
+    }
+
+    memmove(s, res, strlen(res) + 1);
+  }
 }
 
 char char2digit(char ch) {

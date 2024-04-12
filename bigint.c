@@ -90,6 +90,9 @@ BigIntError bigint_set_hex(const char *hex, bigint *result) {
 }
 
 char *bigint_get_hex(const bigint *bigint, bool upper) {
+  if (bigint->len == 0) {
+    return "0";
+  }
   const char *OUT_HEX = upper ? "0123456789ABCDEF" : "0123456789abcdef";
   const size_t hex_len = bigint->len * LIMB_SIZE_BYTES * 2 + 1;
 
@@ -97,6 +100,7 @@ char *bigint_get_hex(const bigint *bigint, bool upper) {
   if (hex == NULL) {
     return NULL;
   }
+  hex[hex_len-1] = '\0';
 
   size_t hex_index = 0;
   for (size_t i = bigint->len - 1; i + 1 > 0; i--) {
@@ -109,16 +113,7 @@ char *bigint_get_hex(const bigint *bigint, bool upper) {
     }
   }
 
-  hex[hex_index] = '\0';
-  hex = ltrim(hex);
-  if (hex[0] == '\0') {
-    hex = realloc(hex, 2);
-    if (hex == NULL) {
-      return NULL;
-    }
-    hex[0] = '0';
-    hex[1] = '\0';
-  }
+  ltrim(hex);
   return hex;
 }
 
