@@ -5,7 +5,8 @@ import math
 
 random.seed(12345)
 TESTS = 25
-BITS = 4096
+BITS_A = 4096
+BITS_B = 4096
 lib = ctypes.CDLL("./bigint.so")
 LIMB_SIZE_BITS = 64
 Limb = ctypes.c_uint64
@@ -26,7 +27,7 @@ lib.bigint_bit_xor.argtypes = [ctypes.POINTER(Bigint), ctypes.POINTER(Bigint),
 def rand(bits):
     return random.getrandbits(bits)
 
-def bit_not(num, bits=BITS):
+def bit_not(num, bits):
     return num ^ ((1 << bits) - 1)
 
 def prepare_buffer(num):
@@ -36,8 +37,8 @@ def prepare_buffer(num):
     return ctypes.create_string_buffer(hex_)
 
 def test_binary_op(t, python_op, lib_op):
-    a = rand(BITS)
-    b = rand(BITS)
+    a = rand(BITS_A)
+    b = rand(BITS_B)
     if b > a:
         a, b = b, a
     expected = python_op(a, b)
@@ -61,7 +62,7 @@ def test_binary_op(t, python_op, lib_op):
 class TestLib(unittest.TestCase):
     def test_unary_not(self):
         for i in range(TESTS):
-            some_number_ = rand(BITS)
+            some_number_ = rand(BITS_A)
             bigint = lib.bigint_new_capacity(0)
             lib.bigint_set_hex(prepare_buffer(some_number_), bigint)
             got_hex = lib.bigint_get_hex(bigint, False)
@@ -87,11 +88,11 @@ class TestLib(unittest.TestCase):
     
     def test_division(self):
         for i in range(TESTS):
-            a = rand(BITS)
-            b = rand(BITS)
+            a = rand(BITS_A)
+            b = rand(BITS_B)
             while a == 0 or b == 0:
-                a = rand(BITS)
-                b = rand(BITS)
+                a = rand(BITS_A)
+                b = rand(BITS_B)
             if b > a:
                 a, b = b, a
             bigint_a = lib.bigint_new_capacity(0)
@@ -116,7 +117,7 @@ class TestLib(unittest.TestCase):
 
     def test_shifts(self):
         for i in range(TESTS):
-            a = rand(BITS)
+            a = rand(BITS_A)
             for i in range(0,a.bit_length()+1):
                 bigint_a = lib.bigint_new_capacity(0)
                 bigint_res = lib.bigint_new_capacity(0)
