@@ -23,6 +23,8 @@ lib.bigint_get_hex.restype = ctypes.c_char_p
 lib.bigint_bit_not.argtypes = [ctypes.POINTER(Bigint), ctypes.POINTER(Bigint)]
 lib.bigint_bit_xor.argtypes = [ctypes.POINTER(Bigint), ctypes.POINTER(Bigint),
     ctypes.POINTER(Bigint)]
+lib.bigint_set_from_limb.argtypes = [Limb, ctypes.POINTER(Bigint)]
+lib.bigint_get_to_limb.argtypes = [ctypes.POINTER(Bigint), ctypes.POINTER(Limb)]
 
 def rand(bits):
     return random.getrandbits(bits)
@@ -139,6 +141,20 @@ class TestLib(unittest.TestCase):
                 lib.bigint_free_limbs(bigint_a)
                 lib.bigint_free_limbs(bigint_res)
 
+    def test_from_to_primitive(self):
+        for i in range(TESTS):
+            a = rand(LIMB_SIZE_BITS)
+            bigint = lib.bigint_new_capacity(0)
+            lib.bigint_set_from_limb(a, bigint)
+            self.assertEqual(hex(a)[2:].encode(), lib.bigint_get_hex(bigint, False),)
+            res_a = Limb(0)
+            t = ctypes.c_ulong
+            if LIMB_SIZE_BITS == 32:
+                t = ctypes.c_uint
+            ptr = ctypes.cast(ctypes.addressof(res_a), ctypes.POINTER(t))
+            lib.bigint_get_to_limb(bigint, ptr)
+            self.assertEqual(res_a.value, a)
+            lib.bigint_free_limbs(bigint)
 
 if __name__ == '__main__':
     unittest.main()

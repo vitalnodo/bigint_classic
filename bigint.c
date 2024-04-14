@@ -89,6 +89,21 @@ BigIntError bigint_set_hex(const char *hex, bigint *result) {
   return true;
 }
 
+BigIntError bigint_set_from_limb(Limb from, bigint *result) {
+  bigint_resize(result, MIN_LIMBS);
+  result->limbs[0] = from;
+  result->len = 1;
+  return Ok;
+}
+
+BigIntError bigint_get_to_limb(bigint *input, Limb* result) {
+  if (input->len != 1) {
+    return NotImplemented;
+  }
+  *result = input->limbs[0];
+  return Ok;
+}
+
 char *bigint_get_hex(const bigint *bigint, bool upper) {
   if (bigint->len == 0) {
     return "0";
