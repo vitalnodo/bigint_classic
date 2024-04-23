@@ -61,6 +61,11 @@ BigIntError bigint_mul_karatsuba_internal(const bigint *a,
   const size_t max_len = (a->len > b->len) ? a->len : b->len;
   const size_t middle = (max_len + 1)/2;
   const size_t middle_bytes = (max_len * LIMB_SIZE_BYTES) / 2;
+  #if LIMB_SIZE_BITS != 8
+  const size_t middle_bytes_high = middle_bytes;
+  #else
+  const size_t middle_bytes_high = middle_bytes + 1;
+  #endif
 
   bigint *a_low = bigint_new_capacity(0);
   bigint_resize(a_low, middle);
@@ -70,7 +75,7 @@ BigIntError bigint_mul_karatsuba_internal(const bigint *a,
   bigint *a_high = bigint_new_capacity(0);
   bigint_resize(a_high, middle);
   memset(a_high->limbs, 0, a_high->capacity * LIMB_SIZE_BYTES);
-  memcpy(a_high->limbs, (uint8_t*)a->limbs + middle_bytes,middle_bytes);
+  memcpy(a_high->limbs, (uint8_t*)a->limbs + middle_bytes,middle_bytes_high);
 
   bigint *b_low = bigint_new_capacity(0);
   bigint_resize(b_low, middle);
@@ -80,7 +85,7 @@ BigIntError bigint_mul_karatsuba_internal(const bigint *a,
   bigint *b_high = bigint_new_capacity(0);
   bigint_resize(b_high, middle);
   memset(b_high->limbs, 0, b_high->capacity * LIMB_SIZE_BYTES);
-  memcpy(b_high->limbs, (uint8_t*)b->limbs + middle_bytes,middle_bytes);
+  memcpy(b_high->limbs, (uint8_t*)b->limbs + middle_bytes,middle_bytes_high);
 
   bigint *c0 = bigint_new_capacity(0);
   bigint_mul_karatsuba(a_low, b_low, c0);
@@ -128,11 +133,11 @@ BigIntError bigint_mul_karatsuba(const bigint *a,
   const bigint *b, bigint *result) {
     bigint *a_copy = bigint_new_capacity(0);
     bigint *b_copy = bigint_new_capacity(0);
-    bigint_copy(a, a_copy);
-    bigint_copy(b, b_copy);
     const size_t max_len = (a->len > b->len) ? a->len : b->len;
     bigint_resize(a_copy, max_len);
     bigint_resize(b_copy, max_len);
+    bigint_copy(a, a_copy);
+    bigint_copy(b, b_copy);
     bigint_mul_karatsuba_internal(a_copy, b_copy, result);
     return Ok;
 }
