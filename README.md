@@ -13,7 +13,7 @@ An attempt to implement classic bigint library.
 * comparison
 * montgomery reduce and multiplication
 * randomized tests in python with ctypes and legacy fun colored specific in main.c (not enabled by default)
-* support uint64_t, uint32_t as limbs
+* support uint64_t, uint32_t, uint16_t as limbs
 
 ## Instruction
 To test that everything is ok
@@ -25,7 +25,7 @@ To test that everything is ok
 * montgomery exponentiation
 * [Montgomery reduction with even modulus](https://cetinkayakoc.net/docs/j34.pdf)
 * fix bug (implicit casts?) with multiplication in case
-    when Limb is either uint16_t or uint8_t
+    when Limb is uint8_t
 
 ## Experience
 In some ways, it was quite a challenging project for me, but gdb and patience helped a lot. Of course, there is always room for improvement: you can formally verify, separate the algorithms from the interface, look at optimizations in libdivide, make negative numbers, fast multiplication via Fourier transform, and much more, but it requires even more patience. If you have the courage to go here, you will see that even well-known professors admit that they do not understand the long division algorithm...

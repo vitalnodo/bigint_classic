@@ -38,12 +38,12 @@ BigIntError bigint_mul_classic(const bigint *a, const bigint *b, bigint *result)
       Limb lo, hi;
       supermul(a->limbs[i], b->limbs[j], &lo, &hi);
 
-      if (lo + carry < lo) {
+      if ((Limb)(lo + carry) < lo) {
         hi++;
       }
       lo += carry;
 
-      carry = (lo + result->limbs[i + j] < lo) + hi;
+      carry = ((Limb)(lo + result->limbs[i + j]) < lo) + hi;
       result->limbs[i + j] += lo;
     }
     result->limbs[i + b->len] = carry;

@@ -133,13 +133,10 @@ char *bigint_get_hex(const bigint *bigint, bool upper) {
 }
 
 BigIntError bigint_bit_not(const bigint *a, bigint *result) {
-  if (result->len != a->len) {
-    bigint_resize(result, a->len);
-  }
+  bigint_resize(result, a->len);
   for (size_t i = 0; i < a->len; i++) {
     result->limbs[i] = ~(a->limbs[i]);
   }
-  result->len = a->len;
   return Ok;
 }
 
